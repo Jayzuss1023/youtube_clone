@@ -34,8 +34,8 @@ def upload_thumbnail(file_data: bytes, file_name: str, folder: str = "thumbnails
     else:
         image_bytes = base64.b64decode(file_data)
 
+    # Initialize imagekit and upload
     client = get_imagekit_client()
-
     response = client.files.upload(
         file=image_bytes,
         file_name=file_name,

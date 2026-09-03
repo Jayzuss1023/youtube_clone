@@ -1,5 +1,6 @@
 from django import forms
 
+# Form Inputs and Styling
 class VideoUploadForm(forms.Form):
 
     title = forms.CharField(
