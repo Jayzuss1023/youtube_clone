@@ -6,10 +6,17 @@ from imagekitio import ImageKit
 def get_imagekit_client():
     return ImageKit()
 
+# Video Optimization per ImageKit docs
+def get_optimized_video_url(base_url:str) -> str:
+    if "?" in base_url:
+        return f"{base_url}&tr=q-50,f-auto"
+    return f"{base_url}?tr=q-50,f-auto"
+
+# Upload Video to ImageKit
 def upload_video(file_data: bytes, file_name: str, folder: str = "videos") -> dict:
     public_key = os.environ.get("IMAGEKIT_PUBLIC_KEY")
 
-    client = get_imagekit_client(public_key)
+    client = get_imagekit_client()
 
     response = client.files.upload(
         file=file_data,
@@ -17,6 +24,8 @@ def upload_video(file_data: bytes, file_name: str, folder: str = "videos") -> di
         folder=folder,
         public_key=public_key
     )
+
+    print("UPLOAD RESPONSE",response)
 
     return {
         "file_id": response.file_id,

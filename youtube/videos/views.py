@@ -3,15 +3,26 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
-from .models import Video, VideoLike
+from .models import Video
 from .forms import VideoUploadForm
-from .imagekit_client import upload_video, upload_thumbnail, delete_video
+from .imagekit_client import upload_video, upload_thumbnail
 
 
 # Rendering the template where user will submit the form
 @login_required
 def video_upload_page(request):
-    return render(request, "video/upload.html", {"form": VideoUploadForm()})
+    return render(request, "videos/upload.html", {"form": VideoUploadForm()})
+
+# List all videos
+def video_list(request):
+    videos = Video.objects.all()
+    return render(request, 'videos/list.html', {"videos": videos})
+
+# Get a video
+def video_detail(request, video_id):
+    video = get_object_or_404(Video.objects, id=video_id)
+
+    return render(request, "videos/detailhtml", {"video": video})
 
 # Call function that will create a video when the form is submitted on the video upload page
 @login_required
@@ -54,7 +65,7 @@ def video_upload(request):
                 description=form.cleaned_data['description'],
                 file_id=result['file_id'],
                 video_url=result['url'],
-                thumnbail_url=thumbnail_url
+                thumbnail_url=thumbnail_url
             )
 
             return JsonResponse({
@@ -72,4 +83,5 @@ def video_upload(request):
         for error in field_errors:
             errors.append(f"{field}: {error}" if field != "__all__" else error)
     return JsonResponse({"success": False, "errors": ";".join(errors)})
+
 

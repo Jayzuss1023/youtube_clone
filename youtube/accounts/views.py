@@ -8,6 +8,7 @@ from .forms import CustomUserCreationForm
 class RegisterView(CreateView):
     form_class = CustomUserCreationForm # db model and for fields
     success_url = reverse_lazy("accounts:login") # Where to send the user after saving
+    template_name="accounts/register.html"
 
     # Check if user sending the request has an account that exist
     # If not, call super() to continue with original dispatch() method

@@ -21,7 +21,7 @@ class Video(models.Model):
 
     class Meta:
         # Stores in db based on created at dates to access in that order
-        ordering = '-created_at'
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.title
