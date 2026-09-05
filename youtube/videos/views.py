@@ -22,7 +22,7 @@ def video_list(request):
 def video_detail(request, video_id):
     video = get_object_or_404(Video.objects, id=video_id)
 
-    return render(request, "videos/detailhtml", {"video": video})
+    return render(request, "videos/detail.html", {"video": video})
 
 # Call function that will create a video when the form is submitted on the video upload page
 @login_required

@@ -12,6 +12,15 @@ def get_optimized_video_url(base_url:str) -> str:
         return f"{base_url}&tr=q-50,f-auto"
     return f"{base_url}?tr=q-50,f-auto"
 
+# ImageKit offers a video loading format.
+# This handles loading a video based off the user's internet connection
+def get_streaming_url(base_url: str) -> str:
+    return f"{base_url}/ik-master.m3u8?tr=sr-240_360_480_720_1080"
+
+# ImageKit Thumbnail loader
+def get_thumbnail_url(base_url: str) -> str:
+    return f"{base_url}/ik-thumbnail.jpg"
+
 # Upload Video to ImageKit
 def upload_video(file_data: bytes, file_name: str, folder: str = "videos") -> dict:
     public_key = os.environ.get("IMAGEKIT_PUBLIC_KEY")
