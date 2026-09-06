@@ -2,10 +2,10 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-
 from .models import Video
 from .forms import VideoUploadForm
 from .imagekit_client import upload_video, upload_thumbnail
+
 
 
 # Rendering the template where user will submit the form
@@ -23,6 +23,10 @@ def video_detail(request, video_id):
     video = get_object_or_404(Video.objects, id=video_id)
 
     return render(request, "videos/detail.html", {"video": video})
+
+def channel_videos(request, username):
+    videos = Video.objects.filter(user__username=username)
+    return render(request, "videos/channel.html", {"videos": videos, "channel_name": username})
 
 # Call function that will create a video when the form is submitted on the video upload page
 @login_required
@@ -85,3 +89,18 @@ def video_upload(request):
     return JsonResponse({"success": False, "errors": ";".join(errors)})
 
 
+# Delete video
+@login_required
+@require_POST
+def delete_video(request, video_id):
+    video = get_object_or_404(Video, id=video_id)
+
+    try:
+        delete_video(video.file_id)
+    except Exception as e:
+        print(e)
+        pass
+    
+    video.delete()
+
+    return JsonResponse({"success": True, "message": "video deleted"})
