@@ -29,12 +29,14 @@
         <button
           class="vote-btn {% if user_vote == 1 %}active{% endif %}"
           data-vote="like"
+          onclick="vote({{ video.id }}, 'like')"
         >
           👍 <span id="like-count">{{ video.like }}</span>
         </button>
         <button
           class="vote-btn {% if user_vote == -1 %}active{% endif %}"
           data-vote="dislike"
+          onclick="vote({{ video.id }}, 'dislike')"
         >
           👎 <span id="dislike-count">{{ video.dislikes }}</span>
         </button>
@@ -103,6 +105,7 @@
     videoError.style.display = "flex"
   })
 
+  {% comment %} Handle deletion of video {% endcomment %}
   const csrf = '{{ csrf_token }}'
   function deleteVideo(videoId) {
     if (!confirm("Are you sure you wan to delete this?")) return
@@ -115,5 +118,30 @@
     })
     .catch(() => alert('Failed to delete'))
   }
+
+  {% comment %} Handle Vote Toggle {% endcomment %}
+   function vote(videoId, voteType) {
+
+    {% if not user.is_authenticated %}
+    window.location.href = '{% url "accounts:login" %}'
+    return
+    {% endif %}
+
+    fetch(`/${videoId}/vote/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded", "X-CSRFToken": csrf
+      },
+      body: `vote=${voteType}`
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        document.getElementById("like-count").textContent = data.likes
+        document.getElementById("dislike-count").textContent = data.dislikes
+        document.querySelectorAll(".vote-btn").forEach(btn => btn.classList.remove("active"))
+        if (data.user_vote === 1) document.querySelector('[data-vote="like"]').classList.add("active")
+        else if (data.user_vote === -1) document.querySelector('[data-vote="dislike"]').classList.add("active")
+      })
+   }
 </script>
 {% endblock %}

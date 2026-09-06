@@ -51,3 +51,25 @@ class Video(models.Model):
         if not self.video_url:
             return ""
         return get_optimized_video_url(self.video_url)
+
+class VideoLike(models.Model):
+    LIKE = 1
+    DISLIKE = -1
+    LIKE_CHOICES = [
+        (LIKE, "Like"),
+        (DISLIKE, "Dislike")
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE, related_name="user_likes")
+    value = models.SmallIntegerField(choices=LIKE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Allow for only one like for each user per video
+        unique_together = ["user", "video"]
+
+        def __str__(self):
+            action = "liked" if self.value == self.LIKE else "disliked"
+            return f"{self.user.username} {action} {self.video.title}"
+        
