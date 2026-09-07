@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "youtube/youtube/wsgi.py": {
+      "maxDuration": 60
+    }
+  }
+}

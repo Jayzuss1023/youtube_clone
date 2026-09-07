@@ -149,8 +149,10 @@ activemq-data/
 
 # Environments
 .env
+.env.local
 .envrc
 .venv
+.vercel/
 env/
 venv/
 ENV/
@@ -206,6 +208,9 @@ tempCodeRunnerFile.py
 # Ruff stuff:
 .ruff_cache/
 
+# Agents
+.agents/
+
 # PyPI configuration file
 .pypirc
 
@@ -216,3 +221,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+.vercel
+.env*
