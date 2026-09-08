@@ -89,7 +89,9 @@ YouTube Clone{% endblock %} {% block extra_css %}
           accept="image/*"
           style="display: none"
         />
-        <input type="hidden" name="thumbnail_data" id="thumbnailData" />
+        <input type="hidden" name="file_id" id="fileId" />
+        <input type="hidden" name="video_url" id="videoUrl" />
+        <input type="hidden" name="thumbnail_url" id="thumbnailUrl" />
         <span class="help-text"
           >Leave empty to auto-generate from your video</span
         >
@@ -105,6 +107,13 @@ YouTube Clone{% endblock %} {% block extra_css %}
 {% endblock %} {% block extra_js %}
 <script>
   const $ = (id) => document.getElementById(id);
+  const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+  const ALLOWED_TYPES = [
+    "video/mp4",
+    "video/webm",
+    "video/quicktime",
+    "video/x-msvideo",
+  ];
 
   $("id_video_file").onchange = (e) => {
     const file = e.target.files[0];
@@ -121,26 +130,81 @@ YouTube Clone{% endblock %} {% block extra_css %}
       $("thumbPreview").src = ev.target.result;
       $("thumbPreview").classList.add("visible");
       $("thumb-label").style.display = "none";
-      $("thumbnailData").value = ev.target.result;
     };
     reader.readAsDataURL(file);
   };
 
+  async function getImageKitAuth() {
+    const res = await fetch("{% url 'videos:upload_auth' %}");
+    if (!res.ok) throw new Error("Could not start upload");
+    return res.json();
+  }
+
+  async function uploadFileToImageKit(file, folder) {
+    const auth = await getImageKitAuth();
+    const body = new FormData();
+    body.append("file", file);
+    body.append("fileName", file.name);
+    body.append("publicKey", auth.publicKey);
+    body.append("signature", auth.signature);
+    body.append("expire", String(auth.expire));
+    body.append("token", auth.token);
+    body.append("folder", folder);
+    const res = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+      method: "POST",
+      body,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Upload to storage failed");
+    }
+    return data;
+  }
+
   $("uploadForm").onsubmit = async (e) => {
     e.preventDefault();
 
-    if (!$("id_video_file").files.length || !$("id_title").value.trim()) return;
+    const videoFile = $("id_video_file").files[0];
+    if (!videoFile || !$("id_title").value.trim()) return;
+    if (videoFile.size > MAX_VIDEO_BYTES) {
+      $("errorContainer").innerHTML =
+        `<ul class="error-list"><li>Video must be under 100 MB</li></ul>`;
+      return;
+    }
+    if (videoFile.type && !ALLOWED_TYPES.includes(videoFile.type)) {
+      $("errorContainer").innerHTML =
+        `<ul class="error-list"><li>This video type is not allowed.</li></ul>`;
+      return;
+    }
 
     $("uploadOverlay").classList.add("active");
     $("submitBtn").disabled = true;
-    $("errorContainer").innerHtml = "";
+    $("errorContainer").innerHTML = "";
     window.onbeforeunload = () => "Upload in progress";
 
     try {
+      $("uploadStatus").textContent = "Uploading Video...";
+      const videoResult = await uploadFileToImageKit(videoFile, "videos");
+      $("fileId").value = videoResult.fileId;
+      $("videoUrl").value = videoResult.url;
+
+      const thumbFile = $("customThumbnail").files[0];
+      if (thumbFile) {
+        $("uploadStatus").textContent = "Uploading thumbnail...";
+        const thumbResult = await uploadFileToImageKit(thumbFile, "thumbnails");
+        $("thumbnailUrl").value = thumbResult.url;
+      }
+
+      $("uploadStatus").textContent = "Saving video...";
+      const formData = new FormData(e.target);
+      formData.delete("video_file");
       const res = await fetch("{% url 'videos:upload_submit' %}", {
         method: "POST",
-        body: new FormData(e.target),
+        body: formData,
       });
+      if (res.status === 413) {
+        throw new Error("File is too large for this host. Try a smaller video.");
+      }
       const data = await res.json();
       window.onbeforeunload = null;
 

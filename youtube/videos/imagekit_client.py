@@ -21,6 +21,18 @@ def get_streaming_url(base_url: str) -> str:
 def get_thumbnail_url(base_url: str) -> str:
     return f"{base_url}/ik-thumbnail.jpg"
 
+def get_client_upload_auth() -> dict:
+    public_key = os.environ.get("IMAGEKIT_PUBLIC_KEY")
+    client = get_imagekit_client()
+    params = client.helper.get_authentication_parameters()
+    return {
+        "token": params["token"],
+        "expire": params["expire"],
+        "signature": params["signature"],
+        "publicKey": public_key,
+    }
+
+
 # Upload Video to ImageKit
 def upload_video(file_data: bytes, file_name: str, folder: str = "videos") -> dict:
     public_key = os.environ.get("IMAGEKIT_PUBLIC_KEY")

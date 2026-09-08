@@ -6,6 +6,7 @@ app_name = "videos"
 urlpatterns = [
     path("", views.video_list, name="list"),
     path("upload/", views.video_upload_page, name="upload"),
+    path("upload/auth/", views.video_upload_auth, name="upload_auth"),
     path("upload/submit/", views.video_upload, name="upload_submit"),
     path("<int:video_id>", views.video_detail, name="detail"),
     path("channel/<str:username>/", views.channel_videos, name="channel"),
